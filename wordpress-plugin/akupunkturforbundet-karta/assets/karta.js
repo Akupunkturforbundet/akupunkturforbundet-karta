@@ -4,6 +4,13 @@
   const data = Array.isArray(window.safKartaData) ? window.safKartaData : [];
   const swedenBounds = [[55.1, 10.5], [69.2, 24.5]];
   const mapLimits = [[53, 7], [71, 28]];
+  const markerIcon = window.L.divIcon({
+    className: "saf-karta__marker",
+    html: '<span class="saf-karta__marker-pin" aria-hidden="true"></span>',
+    iconSize: [32, 42],
+    iconAnchor: [16, 42],
+    popupAnchor: [0, -38]
+  });
 
   const normalize = (value) => value.trim().toLocaleLowerCase("sv-SE");
   const postal = (value) => value.replace(/\s/g, "");
@@ -77,7 +84,7 @@
 
       const bounds = window.L.latLngBounds([]);
       items.forEach((item) => {
-        const marker = window.L.marker([item.latitude, item.longitude], { title: item.name }).bindPopup(`<div class="saf-karta__popup">${personHtml(item)}</div>`).addTo(layer);
+        const marker = window.L.marker([item.latitude, item.longitude], { title: item.name, icon: markerIcon }).bindPopup(`<div class="saf-karta__popup">${personHtml(item)}</div>`).addTo(layer);
         markers.set(item.id, marker);
         bounds.extend([item.latitude, item.longitude]);
 

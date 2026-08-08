@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -91,23 +91,27 @@ function saf_karta_geocode_member() {
     foreach ($posts as $post_id) {
         $raw_address = get_post_meta($post_id, 'adress', true);
         $locality = get_post_meta($post_id, 'ort', true);
-        $address_hash = md5($raw_address . '|' . $locality);
+        $address_hash = md5('v2|' . $raw_address . '|' . $locality);
         if (get_post_meta($post_id, '_saf_karta_address_hash', true) === $address_hash) {
             continue;
         }
 
         $address = saf_karta_parse_address($raw_address, $locality);
-        $query = trim(implode(', ', array_filter(array($address['streetAddress'], $address['postalCode'], $address['locality'], 'Sverige'))));
         if (!$address['streetAddress'] || !$address['locality']) {
             update_post_meta($post_id, '_saf_karta_address_hash', $address_hash);
             continue;
         }
 
+        delete_post_meta($post_id, '_saf_karta_latitude');
+        delete_post_meta($post_id, '_saf_karta_longitude');
         $response = wp_remote_get(add_query_arg(array(
             'format' => 'jsonv2',
             'limit' => 1,
             'countrycodes' => 'se',
-            'q' => $query,
+            'street' => $address['streetAddress'],
+            'postalcode' => $address['postalCode'],
+            'city' => $address['locality'],
+            'country' => 'Sverige',
         ), 'https://nominatim.openstreetmap.org/search'), array(
             'timeout' => 15,
             'user-agent' => 'Svenska Akupunkturforbundet karttest; ' . home_url('/'),
@@ -115,7 +119,7 @@ function saf_karta_geocode_member() {
 
         if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
             $results = json_decode(wp_remote_retrieve_body($response), true);
-            if (!empty($results[0]['lat']) && !empty($results[0]['lon'])) {
+            if (!empty($results[0]['lat']) && !empty($results[0]['lon']) && $results[0]['lat'] >= 55 && $results[0]['lat'] <= 70 && $results[0]['lon'] >= 10 && $results[0]['lon'] <= 25) {
                 update_post_meta($post_id, '_saf_karta_latitude', $results[0]['lat']);
                 update_post_meta($post_id, '_saf_karta_longitude', $results[0]['lon']);
             }
@@ -134,7 +138,7 @@ add_action('saf_karta_geocode_member', 'saf_karta_geocode_member');
 add_action('save_post_medlemmar', 'saf_karta_schedule_geocoding');
 
 function saf_karta_shortcode() {
-    $version = '0.2.1';
+    $version = '0.2.2';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
