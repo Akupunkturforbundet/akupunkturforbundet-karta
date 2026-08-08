@@ -1,0 +1,38 @@
+name: Bygg WordPress-paket
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Skapa installationsfil
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hämta källkoden
+        uses: actions/checkout@v4
+
+      - name: Kontrollera PHP-syntax
+        run: php -l wordpress-plugin/akupunkturforbundet-karta/akupunkturforbundet-karta.php
+
+      - name: Kontrollera JavaScript-syntax
+        run: node --check wordpress-plugin/akupunkturforbundet-karta/assets/karta.js
+
+      - name: Skapa WordPress-paket
+        working-directory: wordpress-plugin
+        run: zip -r ../akupunkturforbundet-karta-0.1.0.zip akupunkturforbundet-karta
+
+      - name: Kontrollera WordPress-paketet
+        run: unzip -t akupunkturforbundet-karta-0.1.0.zip
+
+      - name: Publicera nedladdningsbar fil
+        uses: actions/upload-artifact@v4
+        with:
+          name: akupunkturforbundet-karta-wordpress
+          path: akupunkturforbundet-karta-0.1.0.zip
+          if-no-files-found: error
+          retention-days: 30
