@@ -15,22 +15,19 @@ För att skapa samma paket lokalt, kör från repositoryts rot:
 ```bash
 mkdir -p release
 cd wordpress-plugin
-zip -r ../release/akupunkturforbundet-karta-0.1.0.zip akupunkturforbundet-karta
+zip -r ../release/akupunkturforbundet-karta-0.2.0.zip akupunkturforbundet-karta
 ```
 
-Installera ZIP-filen endast på den lösenordsskyddade testmiljön. Tillägget använder fiktiva personer så länge ingen lokal medlemsfil har lagts till.
+Installera ZIP-filen endast på den lösenordsskyddade testmiljön.
 
-## Testa med verkliga medlemmar
+## Befintliga medlemsuppgifter
 
-1. Kopiera `akupunkturforbundet-karta/medlemmar.local.php.example` till `akupunkturforbundet-karta/medlemmar.local.php`.
-2. Ersätt exempelposten med endast de kontakt- och mottagningsuppgifter som respektive medlem har godkänt för publicering. Kopiera arrayblocket för att lägga till fler personer.
-3. Ange en unik `id` för varje medlem samt korrekta koordinater i `latitude` och `longitude`. Webbplatser ska anges med `https://`.
-4. Skapa ZIP-paketet först efter att den lokala medlemsfilen har lagts till. Kontrollera kartan enbart i förbundets lösenordsskyddade testmiljö.
+Tillägget läser automatiskt alla publicerade poster av innehållstypen `medlemmar` och återanvänder de befintliga ACF-fälten `namn`, `ort`, `adress`, `telefonnummer`, `e-postadress` och `hemsida`. Ingen separat medlemsfil ska skapas eller underhållas.
 
-`medlemmar.local.php` är Git-ignorerad så att verkliga medlemsuppgifter inte av misstag hamnar i repositoryt. Mallen innehåller inga verkliga personuppgifter. Skicka inte medlemsfilen via GitHub eller andra publika kanaler.
+Kartpositionerna tas fram stegvis från de publicerade mottagningsadresserna via OpenStreetMaps geokodningstjänst Nominatim och sparas som tekniska metadata på medlemsposten. Endast en adress behandlas per körning för att inte belasta tjänsten. Efter installationen kan det därför ta några timmar innan samtliga medlemmar syns på kartan. När en adress ändras uppdateras dess kartposition automatiskt.
 
 ## Begränsningar i testversionen
 
 - Leaflet hämtas från unpkg och kartbilder från OpenStreetMap. Produktionsleverantörer ska beslutas före lansering.
-- Medlemsuppgifterna läses från den lokala filen `medlemmar.local.php`. Någon administration eller automatisk import ingår ännu inte.
+- Endast medlemmar som har en fullständig adress och har fått en kartposition visas. Kontrollera poster som saknas från kartan under **Medlemmar** i WordPress.
 - Installera inte tillägget på den publika webbplatsen i detta skede.
