@@ -3,6 +3,7 @@
 
   const data = Array.isArray(window.safKartaData) ? window.safKartaData : [];
   const swedenBounds = [[55.1, 10.5], [69.2, 24.5]];
+  const mapLimits = [[53, 7], [71, 28]];
 
   const normalize = (value) => value.trim().toLocaleLowerCase("sv-SE");
   const postal = (value) => value.replace(/\s/g, "");
@@ -47,7 +48,11 @@
     const reset = root.querySelector(".saf-karta__reset");
     const results = root.querySelector(".saf-karta__results");
     const status = root.querySelector('[role="status"]');
-    const map = window.L.map(mapElement, { scrollWheelZoom: false }).fitBounds(swedenBounds);
+    const map = window.L.map(mapElement, {
+      scrollWheelZoom: false,
+      maxBounds: mapLimits,
+      maxBoundsViscosity: 1
+    }).fitBounds(swedenBounds, { animate: false });
     const layer = window.L.layerGroup().addTo(map);
     const markers = new Map();
 
@@ -65,7 +70,8 @@
 
       if (!items.length) {
         results.innerHTML = '<div class="saf-karta__empty"><strong>Inga träffar</strong><p>Kontrollera stavningen eller prova ett annat postnummer.</p></div>';
-        map.fitBounds(swedenBounds);
+        map.invalidateSize({ pan: false });
+        map.fitBounds(swedenBounds, { animate: false });
         return;
       }
 
@@ -86,8 +92,9 @@
         results.append(card);
       });
 
-      if (hasQuery) items.length === 1 ? map.setView(bounds.getCenter(), 14) : map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
-      else map.fitBounds(swedenBounds);
+      map.invalidateSize({ pan: false });
+      if (hasQuery) items.length === 1 ? map.setView(bounds.getCenter(), 14, { animate: false }) : map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12, animate: false });
+      else map.fitBounds(swedenBounds, { animate: false });
     }
 
     form.addEventListener("submit", (event) => {
@@ -100,6 +107,9 @@
       nameInput.focus();
     });
     render(data, false);
-    setTimeout(() => map.invalidateSize(), 0);
+    setTimeout(() => {
+      map.invalidateSize({ pan: false });
+      map.fitBounds(swedenBounds, { animate: false });
+    }, 100);
   });
 })();
