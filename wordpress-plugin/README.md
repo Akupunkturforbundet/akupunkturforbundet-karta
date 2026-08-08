@@ -15,7 +15,7 @@ För att skapa samma paket lokalt, kör från repositoryts rot:
 ```bash
 mkdir -p release
 cd wordpress-plugin
-zip -r ../release/akupunkturforbundet-karta-0.1.0.zip akupunkturforbundet-karta
+zip -r ../release/akupunkturforbundet-karta-0.1.1.zip akupunkturforbundet-karta
 ```
 
 Installera ZIP-filen endast på den lösenordsskyddade testmiljön. Tillägget innehåller enbart fiktiva personer.

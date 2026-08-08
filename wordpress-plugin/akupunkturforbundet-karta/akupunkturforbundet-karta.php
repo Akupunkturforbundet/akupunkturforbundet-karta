@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer. Innehåller endast fiktiva uppgifter.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -25,7 +25,7 @@ function saf_karta_testdata() {
 }
 
 function saf_karta_shortcode() {
-    $version = '0.1.0';
+    $version = '0.1.1';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
