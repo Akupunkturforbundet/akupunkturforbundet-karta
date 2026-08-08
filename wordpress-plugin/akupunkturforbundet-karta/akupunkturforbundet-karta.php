@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
- * Description: Testversion av kartan för att hitta anslutna akupunktörer. Innehåller endast fiktiva uppgifter.
+ * Description: Testversion av kartan för att hitta anslutna akupunktörer.
  * Version: 0.1.0
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
@@ -24,6 +24,21 @@ function saf_karta_testdata() {
     );
 }
 
+function saf_karta_data() {
+    $member_file = __DIR__ . '/medlemmar.local.php';
+
+    if (!is_readable($member_file)) {
+        return saf_karta_testdata();
+    }
+
+    $members = include $member_file;
+    return is_array($members) ? $members : saf_karta_testdata();
+}
+
+function saf_karta_uses_member_data() {
+    return is_readable(__DIR__ . '/medlemmar.local.php');
+}
+
 function saf_karta_shortcode() {
     $version = '0.1.0';
     $base_url = plugin_dir_url(__FILE__);
@@ -32,12 +47,14 @@ function saf_karta_shortcode() {
     wp_enqueue_style('saf-karta', $base_url . 'assets/karta.css', array('saf-leaflet'), $version);
     wp_enqueue_script('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true);
     wp_enqueue_script('saf-karta', $base_url . 'assets/karta.js', array('saf-leaflet'), $version, true);
-    wp_add_inline_script('saf-karta', 'window.safKartaData = ' . wp_json_encode(saf_karta_testdata()) . ';', 'before');
+    wp_add_inline_script('saf-karta', 'window.safKartaData = ' . wp_json_encode(saf_karta_data()) . ';', 'before');
 
     ob_start();
     ?>
     <section class="saf-karta" data-saf-karta aria-label="Sök efter akupunktör">
-        <p class="saf-karta__notice"><strong>Testmiljö:</strong> Alla personer och kontaktuppgifter i kartan är fiktiva.</p>
+        <p class="saf-karta__notice"><strong>Testmiljö:</strong>
+            <?php if (saf_karta_uses_member_data()) : ?>Kartan innehåller publiceringsgodkända medlemsuppgifter och får inte delas utanför förbundets testmiljö.<?php else : ?>Alla personer och kontaktuppgifter i kartan är fiktiva.<?php endif; ?>
+        </p>
         <div class="saf-karta__layout">
             <aside class="saf-karta__sidebar">
                 <form class="saf-karta__form" role="search">
