@@ -84,6 +84,7 @@
     }).addTo(map);
 
     function render(items, hasQuery) {
+      root.classList.toggle("saf-karta--has-query", hasQuery);
       layer.clearLayers();
       markers.clear();
       results.replaceChildren();
