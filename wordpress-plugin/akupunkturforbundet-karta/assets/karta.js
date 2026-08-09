@@ -19,6 +19,11 @@
     element.textContent = value || "";
     return element.innerHTML;
   };
+  const httpUrl = (value) => {
+    if (!value || !URL.canParse(value, window.location.origin)) return "";
+    const url = new URL(value, window.location.origin);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+  };
 
   function filter(items, locationQuery, nameQuery) {
     const location = normalize(locationQuery);
@@ -49,7 +54,12 @@
   }
 
   function personHtml(item) {
-    return `<strong>${escapeHtml(item.name)}</strong>${item.clinic ? `<span>${escapeHtml(item.clinic)}</span>` : ""}<address>${escapeHtml(item.streetAddress)}<br>${escapeHtml(item.postalCode)} ${escapeHtml(item.locality)}</address>${contactHtml(item)}`;
+    const profileUrl = httpUrl(item.profileUrl);
+    const imageUrl = httpUrl(item.image);
+    const image = imageUrl ? `<img class="saf-karta__popup-image" src="${escapeHtml(imageUrl)}" alt="" loading="lazy">` : "";
+    const name = profileUrl ? `<a href="${escapeHtml(profileUrl)}"><strong>${escapeHtml(item.name)}</strong></a>` : `<strong>${escapeHtml(item.name)}</strong>`;
+    const profileLink = profileUrl ? `<a class="saf-karta__popup-profile" href="${escapeHtml(profileUrl)}">Visa profil</a>` : "";
+    return `${image}${name}${item.clinic ? `<span>${escapeHtml(item.clinic)}</span>` : ""}<address>${escapeHtml(item.streetAddress)}<br>${escapeHtml(item.postalCode)} ${escapeHtml(item.locality)}</address>${contactHtml(item)}${profileLink}`;
   }
 
   document.querySelectorAll("[data-saf-karta]").forEach((root) => {
@@ -95,7 +105,13 @@
 
         const card = document.createElement("article");
         card.className = "saf-karta__card";
-        card.innerHTML = `<h3>${escapeHtml(item.name)}</h3>${item.clinic ? `<p><strong>${escapeHtml(item.clinic)}</strong></p>` : ""}<address>${escapeHtml(item.streetAddress)}<br>${escapeHtml(item.postalCode)} ${escapeHtml(item.locality)}</address>${contactHtml(item)}<button type="button">Visa på kartan</button>`;
+        const profileUrl = httpUrl(item.profileUrl);
+        const imageUrl = httpUrl(item.image);
+        const image = imageUrl ? `<img class="saf-karta__profile-image" src="${escapeHtml(imageUrl)}" alt="" loading="lazy">` : "";
+        const linkedImage = profileUrl && image ? `<a href="${escapeHtml(profileUrl)}" tabindex="-1">${image}</a>` : image;
+        const name = profileUrl ? `<a href="${escapeHtml(profileUrl)}">${escapeHtml(item.name)}</a>` : escapeHtml(item.name);
+        const profileLink = profileUrl ? `<a class="saf-karta__profile-link" href="${escapeHtml(profileUrl)}">Läs mer</a>` : "";
+        card.innerHTML = `${linkedImage}<h3>${name}</h3>${item.clinic ? `<p><strong>${escapeHtml(item.clinic)}</strong></p>` : ""}<address>${escapeHtml(item.streetAddress)}<br>${escapeHtml(item.postalCode)} ${escapeHtml(item.locality)}</address>${contactHtml(item)}<div class="saf-karta__card-actions"><button type="button">Visa på kartan</button>${profileLink}</div>`;
         card.querySelector("button").addEventListener("click", () => {
           map.setView([item.latitude, item.longitude], 14);
           marker.openPopup();
