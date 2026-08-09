@@ -89,7 +89,9 @@
       markers.clear();
       results.replaceChildren();
       status.textContent = `${items.length} ${items.length === 1 ? "akupunktör" : "akupunktörer"} hittades`;
-      reset.hidden = !hasQuery;
+      // Keep the form the same height before and after a search so that it
+      // remains in exactly the same centred position beside the map.
+      reset.hidden = false;
 
       if (!items.length) {
         results.innerHTML = '<div class="saf-karta__empty"><strong>Inga träffar</strong><p>Kontrollera stavningen eller prova ett annat postnummer.</p></div>';
