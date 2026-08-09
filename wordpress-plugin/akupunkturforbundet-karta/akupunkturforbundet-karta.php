@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.2.8
+ * Version: 0.2.9
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -41,6 +41,19 @@ function saf_karta_website_url($value) {
     return $value;
 }
 
+function saf_karta_has_personal_photo($thumbnail_id) {
+    if (!$thumbnail_id) {
+        return false;
+    }
+
+    $attachment = get_post($thumbnail_id);
+    $file = get_attached_file($thumbnail_id);
+    $alt = get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true);
+    $description = basename((string) $file) . ' ' . ($attachment ? $attachment->post_title : '') . ' ' . $alt;
+
+    return !preg_match('/(?:^|[\s._-])(avatar|default|placeholder|profilbild|profile-icon|user-icon|standardbild)(?:[\s._-]|$)/iu', $description);
+}
+
 function saf_karta_member_data() {
     $members = array();
     $posts = get_posts(array(
@@ -50,15 +63,6 @@ function saf_karta_member_data() {
         'orderby' => 'title',
         'order' => 'ASC',
     ));
-    $thumbnail_counts = array();
-
-    foreach ($posts as $post) {
-        $thumbnail_id = get_post_thumbnail_id($post);
-        if ($thumbnail_id) {
-            $thumbnail_counts[$thumbnail_id] = isset($thumbnail_counts[$thumbnail_id]) ? $thumbnail_counts[$thumbnail_id] + 1 : 1;
-        }
-    }
-
     foreach ($posts as $post) {
         $latitude = get_post_meta($post->ID, '_saf_karta_latitude', true);
         $longitude = get_post_meta($post->ID, '_saf_karta_longitude', true);
@@ -68,7 +72,7 @@ function saf_karta_member_data() {
 
         $address = saf_karta_parse_address(get_post_meta($post->ID, 'adress', true), get_post_meta($post->ID, 'ort', true));
         $thumbnail_id = get_post_thumbnail_id($post);
-        $has_personal_photo = $thumbnail_id && $thumbnail_counts[$thumbnail_id] === 1;
+        $has_personal_photo = saf_karta_has_personal_photo($thumbnail_id);
         $members[] = array_merge(array(
             'id' => 'medlem-' . $post->ID,
             'name' => get_post_meta($post->ID, 'namn', true) ?: get_the_title($post),
@@ -169,7 +173,7 @@ function saf_karta_refresh_rewrite_rules() {
 add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
 
 function saf_karta_shortcode() {
-    $version = '0.2.8';
+    $version = '0.2.9';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
