@@ -1,19 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-labelledby="title desc">
-  <title id="title">Dekorativ blomma</title>
-  <desc id="desc">En stilren blå och gul blomma för medlemmar som saknar profilfoto.</desc>
+  <title id="title">Dekorativ lotusblomma</title>
+  <desc id="desc">En stilren blå och gul lotusblomma utan stjälk för medlemmar som saknar profilfoto.</desc>
   <rect width="800" height="520" fill="#f4f6f9"/>
-  <g transform="translate(400 258)">
-    <path d="M0 184C-8 118-2 52 7-14" fill="none" stroke="#102d4a" stroke-width="12" stroke-linecap="round"/>
-    <path d="M-3 110C-70 78-124 86-158 126c67 14 121 0 158-16Z" fill="#071d82" opacity=".9"/>
-    <path d="M5 72c60-41 114-41 158-8-56 33-108 36-158 8Z" fill="#1686b5" opacity=".9"/>
-    <g stroke="#fff" stroke-width="8" stroke-linejoin="round">
-      <path d="M0 22C-111 3-151-72-119-139-47-140-3-83 0 22Z" fill="#1686b5"/>
-      <path d="M0 22C111 3 151-72 119-139 47-140 3-83 0 22Z" fill="#1686b5"/>
-      <path d="M0 15C-76-56-73-139 0-190 73-139 76-56 0 15Z" fill="#071d82"/>
-      <path d="M0 24C-64 40-113 11-126-45-69-51-23-27 0 24Z" fill="#ffb900"/>
-      <path d="M0 24C64 40 113 11 126-45 69-51 23-27 0 24Z" fill="#ffb900"/>
-    </g>
-    <circle cy="2" r="35" fill="#fff"/>
-    <circle cy="2" r="21" fill="#ffb900"/>
+  <g transform="translate(400 275)" stroke="#fff" stroke-width="8" stroke-linejoin="round">
+    <path d="M0 100C-155 91-238 14-236-83-139-89-50-38 0 100Z" fill="#1686b5"/>
+    <path d="M0 100C155 91 238 14 236-83 139-89 50-38 0 100Z" fill="#1686b5"/>
+    <path d="M-6 95C-126 41-160-64-111-145-35-116 4-31-6 95Z" fill="#071d82"/>
+    <path d="M6 95C126 41 160-64 111-145 35-116-4-31 6 95Z" fill="#071d82"/>
+    <path d="M0 86C-77-4-70-129 0-207 70-129 77-4 0 86Z" fill="#ffb900"/>
+    <path d="M0 105C-102 111-181 78-224 18-113 3-39 39 0 105Z" fill="#102d4a"/>
+    <path d="M0 105C102 111 181 78 224 18 113 3 39 39 0 105Z" fill="#102d4a"/>
+    <path d="M-250 127C-104 151 104 151 250 127" fill="none" stroke="#ffb900" stroke-width="12" stroke-linecap="round"/>
   </g>
 </svg>

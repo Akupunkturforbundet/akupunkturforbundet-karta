@@ -1,7 +1,19 @@
 (function () {
   "use strict";
 
-  const data = Array.isArray(window.safKartaData) ? window.safKartaData : [];
+  const sourceData = Array.isArray(window.safKartaData) ? window.safKartaData : [];
+  const shuffled = (items) => {
+    const result = [...items];
+    for (let index = result.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [result[index], result[randomIndex]] = [result[randomIndex], result[index]];
+    }
+    return result;
+  };
+  const data = [
+    ...shuffled(sourceData.filter((item) => item.hasPhoto)),
+    ...shuffled(sourceData.filter((item) => !item.hasPhoto))
+  ];
   const swedenBounds = [[55.1, 10.5], [69.2, 24.5]];
   const mapLimits = [[53, 7], [71, 28]];
   const markerIcon = window.L.divIcon({
