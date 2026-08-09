@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.2.7
+ * Version: 0.2.8
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -50,6 +50,14 @@ function saf_karta_member_data() {
         'orderby' => 'title',
         'order' => 'ASC',
     ));
+    $thumbnail_counts = array();
+
+    foreach ($posts as $post) {
+        $thumbnail_id = get_post_thumbnail_id($post);
+        if ($thumbnail_id) {
+            $thumbnail_counts[$thumbnail_id] = isset($thumbnail_counts[$thumbnail_id]) ? $thumbnail_counts[$thumbnail_id] + 1 : 1;
+        }
+    }
 
     foreach ($posts as $post) {
         $latitude = get_post_meta($post->ID, '_saf_karta_latitude', true);
@@ -59,6 +67,8 @@ function saf_karta_member_data() {
         }
 
         $address = saf_karta_parse_address(get_post_meta($post->ID, 'adress', true), get_post_meta($post->ID, 'ort', true));
+        $thumbnail_id = get_post_thumbnail_id($post);
+        $has_personal_photo = $thumbnail_id && $thumbnail_counts[$thumbnail_id] === 1;
         $members[] = array_merge(array(
             'id' => 'medlem-' . $post->ID,
             'name' => get_post_meta($post->ID, 'namn', true) ?: get_the_title($post),
@@ -67,10 +77,18 @@ function saf_karta_member_data() {
             'phone' => get_post_meta($post->ID, 'telefonnummer', true),
             'email' => get_post_meta($post->ID, 'e-postadress', true),
             'website' => saf_karta_website_url(get_post_meta($post->ID, 'hemsida', true)),
-            'image' => get_the_post_thumbnail_url($post, 'medium_large') ?: '',
+            'image' => $has_personal_photo ? (get_the_post_thumbnail_url($post, 'medium_large') ?: '') : '',
+            'hasPhoto' => (bool) $has_personal_photo,
             'profileUrl' => get_permalink($post),
         ), $address);
     }
+
+    usort($members, function ($first, $second) {
+        if ($first['hasPhoto'] !== $second['hasPhoto']) {
+            return $first['hasPhoto'] ? -1 : 1;
+        }
+        return strcasecmp($first['name'], $second['name']);
+    });
 
     return $members;
 }
@@ -151,7 +169,7 @@ function saf_karta_refresh_rewrite_rules() {
 add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
 
 function saf_karta_shortcode() {
-    $version = '0.2.7';
+    $version = '0.2.8';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
