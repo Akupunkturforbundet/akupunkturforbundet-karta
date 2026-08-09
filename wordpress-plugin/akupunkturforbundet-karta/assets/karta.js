@@ -26,6 +26,15 @@
 
   const normalize = (value) => value.trim().toLocaleLowerCase("sv-SE");
   const postal = (value) => value.replace(/\s/g, "");
+  const matchesCounty = (item, query) => {
+    const normalizedQuery = normalize(query);
+    if (normalize(item.county || "").includes(normalizedQuery)) return true;
+
+    // Jämtlands län uses postal areas 83 and 84. This fallback makes the
+    // county searchable while older member records receive saved county data.
+    const isJamtland = normalizedQuery === "jämtland" || normalizedQuery === "jämtlands län";
+    return isJamtland && /^(83|84)/.test(postal(item.postalCode || ""));
+  };
   const escapeHtml = (value) => {
     const element = document.createElement("span");
     element.textContent = value || "";
@@ -47,13 +56,13 @@
       if (name) {
         const matchesName = normalize(item.name).includes(name);
         const matchesLocality = normalize(item.locality).includes(name);
-        const matchesCounty = normalize(item.county || "").includes(name);
+        const matchesMemberCounty = matchesCounty(item, name);
         const matchesPostalCode = /^\d+$/.test(postal(name)) && postal(item.postalCode).startsWith(postal(name));
-        if (!matchesName && !matchesLocality && !matchesCounty && !matchesPostalCode) return false;
+        if (!matchesName && !matchesLocality && !matchesMemberCounty && !matchesPostalCode) return false;
       }
       if (!location) return true;
       if (isPostal) return postal(item.postalCode).startsWith(postalQuery);
-      return normalize(item.locality) === location || normalize(item.county || "").includes(location);
+      return normalize(item.locality) === location || matchesCounty(item, location);
     });
   }
 
