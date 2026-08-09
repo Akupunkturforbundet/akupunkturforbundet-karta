@@ -24,15 +24,15 @@ jobs:
 
       - name: Skapa WordPress-paket
         working-directory: wordpress-plugin
-        run: zip -r ../akupunkturforbundet-karta-0.3.5.zip akupunkturforbundet-karta
+        run: zip -r ../akupunkturforbundet-karta-0.3.6.zip akupunkturforbundet-karta
 
       - name: Kontrollera WordPress-paketet
-        run: unzip -t akupunkturforbundet-karta-0.3.5.zip
+        run: unzip -t akupunkturforbundet-karta-0.3.6.zip
 
       - name: Publicera nedladdningsbar fil
         uses: actions/upload-artifact@v4
         with:
           name: akupunkturforbundet-karta-wordpress
-          path: akupunkturforbundet-karta-0.3.5.zip
+          path: akupunkturforbundet-karta-0.3.6.zip
           if-no-files-found: error
           retention-days: 30

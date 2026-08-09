@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.3.5
+ * Version: 0.3.6
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -56,6 +56,8 @@ function saf_karta_has_personal_photo($thumbnail_id) {
 
 function saf_karta_member_data() {
     $members = array();
+    $thumbnail_counts = array();
+    $default_image = plugin_dir_url(__FILE__) . 'assets/standardprofil.svg';
     $posts = get_posts(array(
         'post_type' => 'medlemmar',
         'post_status' => 'publish',
@@ -72,6 +74,9 @@ function saf_karta_member_data() {
 
         $address = saf_karta_parse_address(get_post_meta($post->ID, 'adress', true), get_post_meta($post->ID, 'ort', true));
         $thumbnail_id = get_post_thumbnail_id($post);
+        if ($thumbnail_id) {
+            $thumbnail_counts[$thumbnail_id] = isset($thumbnail_counts[$thumbnail_id]) ? $thumbnail_counts[$thumbnail_id] + 1 : 1;
+        }
         $has_personal_photo = saf_karta_has_personal_photo($thumbnail_id);
         $members[] = array_merge(array(
             'id' => 'medlem-' . $post->ID,
@@ -81,11 +86,21 @@ function saf_karta_member_data() {
             'phone' => get_post_meta($post->ID, 'telefonnummer', true),
             'email' => get_post_meta($post->ID, 'e-postadress', true),
             'website' => saf_karta_website_url(get_post_meta($post->ID, 'hemsida', true)),
-            'image' => $has_personal_photo ? (get_the_post_thumbnail_url($post, 'medium_large') ?: '') : '',
+            'image' => $has_personal_photo ? (get_the_post_thumbnail_url($post, 'medium_large') ?: '') : $default_image,
             'hasPhoto' => (bool) $has_personal_photo,
+            'thumbnailId' => (int) $thumbnail_id,
             'profileUrl' => get_permalink($post),
         ), $address);
     }
+
+    foreach ($members as &$member) {
+        if ($member['thumbnailId'] && ($thumbnail_counts[$member['thumbnailId']] ?? 0) >= 3) {
+            $member['image'] = $default_image;
+            $member['hasPhoto'] = false;
+        }
+        unset($member['thumbnailId']);
+    }
+    unset($member);
 
     usort($members, function ($first, $second) {
         if ($first['hasPhoto'] !== $second['hasPhoto']) {
@@ -173,7 +188,7 @@ function saf_karta_refresh_rewrite_rules() {
 add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
 
 function saf_karta_shortcode() {
-    $version = '0.3.5';
+    $version = '0.3.6';
     $base_url = plugin_dir_url(__FILE__);
     $custom_logo_id = get_theme_mod('custom_logo');
     $custom_logo = $custom_logo_id ? wp_get_attachment_image($custom_logo_id, 'full', false, array(
