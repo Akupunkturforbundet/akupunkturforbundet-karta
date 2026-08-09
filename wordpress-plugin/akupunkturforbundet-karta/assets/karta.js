@@ -63,6 +63,19 @@
   }
 
   document.querySelectorAll("[data-saf-karta]").forEach((root) => {
+    const logoContainer = root.querySelector("[data-saf-karta-logo]");
+    if (logoContainer && !logoContainer.querySelector("img")) {
+      const siteLogo = document.querySelector(".custom-logo, .elementor-widget-theme-site-logo img, .site-logo img, .site-branding img, header .elementor-widget-image img");
+      if (siteLogo && !root.contains(siteLogo)) {
+        const logo = siteLogo.cloneNode(true);
+        logo.removeAttribute("id");
+        logo.className = "saf-karta__logo-image";
+        logo.alt = "Svenska Akupunkturförbundet";
+        logoContainer.append(logo);
+      } else {
+        logoContainer.hidden = true;
+      }
+    }
     const mapElement = root.querySelector(".saf-karta__map");
     const form = root.querySelector(".saf-karta__form");
     const nameInput = form.elements.name;
@@ -102,7 +115,10 @@
 
       const bounds = window.L.latLngBounds([]);
       items.forEach((item) => {
-        const marker = window.L.marker([item.latitude, item.longitude], { title: item.name, icon: markerIcon }).bindPopup(`<div class="saf-karta__popup">${personHtml(item)}</div>`).addTo(layer);
+        const marker = window.L.marker([item.latitude, item.longitude], { title: item.name, icon: markerIcon }).bindPopup(`<div class="saf-karta__popup">${personHtml(item)}</div>`, {
+          autoPanPaddingTopLeft: [30, 140],
+          autoPanPaddingBottomRight: [30, 30]
+        }).addTo(layer);
         markers.set(item.id, marker);
         bounds.extend([item.latitude, item.longitude]);
 
