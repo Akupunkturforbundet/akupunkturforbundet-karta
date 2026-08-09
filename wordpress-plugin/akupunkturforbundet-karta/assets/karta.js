@@ -119,6 +119,13 @@
           autoPanPaddingTopLeft: [30, 140],
           autoPanPaddingBottomRight: [30, 30]
         }).addTo(layer);
+        marker.on("popupopen", () => {
+          map.panInside(marker.getLatLng(), {
+            paddingTopLeft: [40, 390],
+            paddingBottomRight: [40, 60],
+            animate: false
+          });
+        });
         markers.set(item.id, marker);
         bounds.extend([item.latitude, item.longitude]);
 
