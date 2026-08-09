@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" role="img" aria-labelledby="title desc">
+  <title id="title">Dekorativ lotusblomma</title>
+  <desc id="desc">En stilren blå och gul lotusblomma utan stjälk för medlemmar som saknar profilfoto.</desc>
+  <rect width="800" height="520" fill="#f4f6f9"/>
+  <g transform="translate(400 275)" stroke="#fff" stroke-width="8" stroke-linejoin="round">
+    <path d="M0 100C-155 91-238 14-236-83-139-89-50-38 0 100Z" fill="#1686b5"/>
+    <path d="M0 100C155 91 238 14 236-83 139-89 50-38 0 100Z" fill="#1686b5"/>
+    <path d="M-6 95C-126 41-160-64-111-145-35-116 4-31-6 95Z" fill="#071d82"/>
+    <path d="M6 95C126 41 160-64 111-145 35-116-4-31 6 95Z" fill="#071d82"/>
+    <path d="M0 86C-77-4-70-129 0-207 70-129 77-4 0 86Z" fill="#ffb900"/>
+    <path d="M0 105C-102 111-181 78-224 18-113 3-39 39 0 105Z" fill="#102d4a"/>
+    <path d="M0 105C102 111 181 78 224 18 113 3 39 39 0 105Z" fill="#102d4a"/>
+    <path d="M-250 127C-104 151 104 151 250 127" fill="none" stroke="#ffb900" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>
