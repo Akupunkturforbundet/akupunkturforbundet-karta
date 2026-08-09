@@ -27,7 +27,12 @@
     const isPostal = /^\d+$/.test(postalQuery);
 
     return items.filter((item) => {
-      if (name && !normalize(item.name).includes(name)) return false;
+      if (name) {
+        const matchesName = normalize(item.name).includes(name);
+        const matchesLocality = normalize(item.locality).includes(name);
+        const matchesPostalCode = /^\d+$/.test(postal(name)) && postal(item.postalCode).startsWith(postal(name));
+        if (!matchesName && !matchesLocality && !matchesPostalCode) return false;
+      }
       if (!location) return true;
       return isPostal ? postal(item.postalCode).startsWith(postalQuery) : normalize(item.locality) === location;
     });
