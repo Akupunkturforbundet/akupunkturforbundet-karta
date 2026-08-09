@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.2.6
+ * Version: 0.2.7
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -139,8 +139,19 @@ register_activation_hook(__FILE__, 'saf_karta_schedule_geocoding');
 add_action('saf_karta_geocode_member', 'saf_karta_geocode_member');
 add_action('save_post_medlemmar', 'saf_karta_schedule_geocoding');
 
+
+function saf_karta_refresh_rewrite_rules() {
+    if (get_option('saf_karta_rewrite_version') === '0.2.7') {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('saf_karta_rewrite_version', '0.2.7');
+}
+add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
+
 function saf_karta_shortcode() {
-    $version = '0.2.6';
+    $version = '0.2.7';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
