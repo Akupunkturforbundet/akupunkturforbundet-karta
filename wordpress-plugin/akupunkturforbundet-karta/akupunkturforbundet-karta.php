@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
- * Description: Testversion av kartan för att hitta anslutna akupunktörer. Innehåller endast fiktiva uppgifter.
- * Version: 0.1.0
+ * Description: Testversion av kartan för att hitta anslutna akupunktörer.
+ * Version: 0.3.0
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -11,33 +11,182 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function saf_karta_testdata() {
+function saf_karta_parse_address($value, $fallback_locality = '') {
+    $plain = preg_replace('/<br\s*\/?>/i', "\n", (string) $value);
+    $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', wp_strip_all_tags($plain)))));
+    $postal_code = '';
+    $locality = trim((string) $fallback_locality);
+
+    if ($lines && preg_match('/^(\d{3})\s?(\d{2})\s+(.+)$/u', end($lines), $matches)) {
+        $postal_code = $matches[1] . ' ' . $matches[2];
+        $locality = trim($matches[3]);
+        array_pop($lines);
+    }
+
+    $street_address = $lines ? array_pop($lines) : '';
+
     return array(
-        array('id' => 'test-01', 'name' => 'Anna Lind', 'clinic' => 'Lugnets mottagning', 'streetAddress' => 'Kungsgatan 18', 'postalCode' => '111 35', 'locality' => 'Stockholm', 'latitude' => 59.3352, 'longitude' => 18.0641, 'phone' => '070-000 00 01', 'email' => 'anna.lind@example.com', 'website' => 'https://example.com'),
-        array('id' => 'test-02', 'name' => 'Erik Sjöberg', 'clinic' => 'Balanskliniken', 'streetAddress' => 'S:t Olofsgatan 12', 'postalCode' => '753 12', 'locality' => 'Uppsala', 'latitude' => 59.8605, 'longitude' => 17.6428, 'phone' => '070-000 00 02', 'email' => 'erik.sjoberg@example.com'),
-        array('id' => 'test-03', 'name' => 'Maria Ek', 'clinic' => 'Västerhöjds mottagning', 'streetAddress' => 'Linnégatan 31', 'postalCode' => '413 04', 'locality' => 'Göteborg', 'latitude' => 57.6989, 'longitude' => 11.9511, 'phone' => '070-000 00 03', 'email' => 'maria.ek@example.com', 'website' => 'https://example.com'),
-        array('id' => 'test-04', 'name' => 'Johan Berg', 'clinic' => 'Sundets akupunktur', 'streetAddress' => 'Stora Nygatan 22', 'postalCode' => '211 37', 'locality' => 'Malmö', 'latitude' => 55.6045, 'longitude' => 13.0002),
-        array('id' => 'test-05', 'name' => 'Sara Holm', 'clinic' => 'Harmoni i norr', 'streetAddress' => 'Rådhusesplanaden 7', 'postalCode' => '903 28', 'locality' => 'Umeå', 'latitude' => 63.8268, 'longitude' => 20.263),
-        array('id' => 'test-06', 'name' => 'Lena Nyström', 'clinic' => 'Örebro hälsorum', 'streetAddress' => 'Drottninggatan 16', 'postalCode' => '702 10', 'locality' => 'Örebro', 'latitude' => 59.2719, 'longitude' => 15.2106, 'phone' => '070-000 00 06', 'email' => 'lena.nystrom@example.com', 'website' => 'https://example.com'),
-        array('id' => 'test-07', 'name' => 'Oskar Vik', 'clinic' => 'Trädgårdens mottagning', 'streetAddress' => 'Borgmästargränd 4', 'postalCode' => '553 20', 'locality' => 'Jönköping', 'latitude' => 57.7815, 'longitude' => 14.1618),
-        array('id' => 'test-08', 'name' => 'Karin Lund', 'clinic' => 'Kustens klinik', 'streetAddress' => 'Norra Kyrkogatan 8', 'postalCode' => '252 23', 'locality' => 'Helsingborg', 'latitude' => 56.047, 'longitude' => 12.694)
+        'clinic' => implode(', ', $lines),
+        'streetAddress' => $street_address,
+        'postalCode' => $postal_code,
+        'locality' => $locality,
     );
 }
 
+function saf_karta_website_url($value) {
+    $value = trim((string) $value);
+    if ($value && !preg_match('#^https?://#i', $value)) {
+        $value = 'https://' . $value;
+    }
+    return $value;
+}
+
+function saf_karta_has_personal_photo($thumbnail_id) {
+    if (!$thumbnail_id) {
+        return false;
+    }
+
+    $attachment = get_post($thumbnail_id);
+    $file = get_attached_file($thumbnail_id);
+    $alt = get_post_meta($thumbnail_id, '_wp_attachment_image_alt', true);
+    $description = basename((string) $file) . ' ' . ($attachment ? $attachment->post_title : '') . ' ' . $alt;
+
+    return !preg_match('/(?:^|[\s._-])(avatar|default|placeholder|profilbild|profile-icon|user-icon|standardbild)(?:[\s._-]|$)/iu', $description);
+}
+
+function saf_karta_member_data() {
+    $members = array();
+    $posts = get_posts(array(
+        'post_type' => 'medlemmar',
+        'post_status' => 'publish',
+        'numberposts' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+    ));
+    foreach ($posts as $post) {
+        $latitude = get_post_meta($post->ID, '_saf_karta_latitude', true);
+        $longitude = get_post_meta($post->ID, '_saf_karta_longitude', true);
+        if (!is_numeric($latitude) || !is_numeric($longitude)) {
+            continue;
+        }
+
+        $address = saf_karta_parse_address(get_post_meta($post->ID, 'adress', true), get_post_meta($post->ID, 'ort', true));
+        $thumbnail_id = get_post_thumbnail_id($post);
+        $has_personal_photo = saf_karta_has_personal_photo($thumbnail_id);
+        $members[] = array_merge(array(
+            'id' => 'medlem-' . $post->ID,
+            'name' => get_post_meta($post->ID, 'namn', true) ?: get_the_title($post),
+            'latitude' => (float) $latitude,
+            'longitude' => (float) $longitude,
+            'phone' => get_post_meta($post->ID, 'telefonnummer', true),
+            'email' => get_post_meta($post->ID, 'e-postadress', true),
+            'website' => saf_karta_website_url(get_post_meta($post->ID, 'hemsida', true)),
+            'image' => $has_personal_photo ? (get_the_post_thumbnail_url($post, 'medium_large') ?: '') : '',
+            'hasPhoto' => (bool) $has_personal_photo,
+            'profileUrl' => get_permalink($post),
+        ), $address);
+    }
+
+    usort($members, function ($first, $second) {
+        if ($first['hasPhoto'] !== $second['hasPhoto']) {
+            return $first['hasPhoto'] ? -1 : 1;
+        }
+        return strcasecmp($first['name'], $second['name']);
+    });
+
+    return $members;
+}
+
+function saf_karta_schedule_geocoding() {
+    if (!wp_next_scheduled('saf_karta_geocode_member')) {
+        wp_schedule_single_event(time() + 10, 'saf_karta_geocode_member');
+    }
+}
+
+function saf_karta_geocode_member() {
+    $needs_reschedule = false;
+    $posts = get_posts(array(
+        'post_type' => 'medlemmar',
+        'post_status' => 'publish',
+        'numberposts' => -1,
+        'fields' => 'ids',
+    ));
+
+    foreach ($posts as $post_id) {
+        $raw_address = get_post_meta($post_id, 'adress', true);
+        $locality = get_post_meta($post_id, 'ort', true);
+        $address_hash = md5('v2|' . $raw_address . '|' . $locality);
+        if (get_post_meta($post_id, '_saf_karta_address_hash', true) === $address_hash) {
+            continue;
+        }
+
+        $address = saf_karta_parse_address($raw_address, $locality);
+        if (!$address['streetAddress'] || !$address['locality']) {
+            update_post_meta($post_id, '_saf_karta_address_hash', $address_hash);
+            continue;
+        }
+
+        delete_post_meta($post_id, '_saf_karta_latitude');
+        delete_post_meta($post_id, '_saf_karta_longitude');
+        $response = wp_remote_get(add_query_arg(array(
+            'format' => 'jsonv2',
+            'limit' => 1,
+            'countrycodes' => 'se',
+            'street' => $address['streetAddress'],
+            'postalcode' => $address['postalCode'],
+            'city' => $address['locality'],
+            'country' => 'Sverige',
+        ), 'https://nominatim.openstreetmap.org/search'), array(
+            'timeout' => 15,
+            'user-agent' => 'Svenska Akupunkturforbundet karttest; ' . home_url('/'),
+        ));
+
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $results = json_decode(wp_remote_retrieve_body($response), true);
+            if (!empty($results[0]['lat']) && !empty($results[0]['lon']) && $results[0]['lat'] >= 55 && $results[0]['lat'] <= 70 && $results[0]['lon'] >= 10 && $results[0]['lon'] <= 25) {
+                update_post_meta($post_id, '_saf_karta_latitude', $results[0]['lat']);
+                update_post_meta($post_id, '_saf_karta_longitude', $results[0]['lon']);
+            }
+            update_post_meta($post_id, '_saf_karta_address_hash', $address_hash);
+        }
+        $needs_reschedule = true;
+        break;
+    }
+
+    if ($needs_reschedule && !wp_next_scheduled('saf_karta_geocode_member')) {
+        wp_schedule_single_event(time() + 90, 'saf_karta_geocode_member');
+    }
+}
+register_activation_hook(__FILE__, 'saf_karta_schedule_geocoding');
+add_action('saf_karta_geocode_member', 'saf_karta_geocode_member');
+add_action('save_post_medlemmar', 'saf_karta_schedule_geocoding');
+
+
+function saf_karta_refresh_rewrite_rules() {
+    if (get_option('saf_karta_rewrite_version') === '0.2.7') {
+        return;
+    }
+
+    flush_rewrite_rules(false);
+    update_option('saf_karta_rewrite_version', '0.2.7');
+}
+add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
+
 function saf_karta_shortcode() {
-    $version = '0.1.0';
+    $version = '0.3.0';
     $base_url = plugin_dir_url(__FILE__);
 
     wp_enqueue_style('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', array(), '1.9.4');
     wp_enqueue_style('saf-karta', $base_url . 'assets/karta.css', array('saf-leaflet'), $version);
     wp_enqueue_script('saf-leaflet', 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', array(), '1.9.4', true);
     wp_enqueue_script('saf-karta', $base_url . 'assets/karta.js', array('saf-leaflet'), $version, true);
-    wp_add_inline_script('saf-karta', 'window.safKartaData = ' . wp_json_encode(saf_karta_testdata()) . ';', 'before');
+    saf_karta_schedule_geocoding();
+    wp_add_inline_script('saf-karta', 'window.safKartaData = ' . wp_json_encode(saf_karta_member_data()) . ';', 'before');
 
     ob_start();
     ?>
     <section class="saf-karta" data-saf-karta aria-label="Sök efter akupunktör">
-        <p class="saf-karta__notice"><strong>Testmiljö:</strong> Alla personer och kontaktuppgifter i kartan är fiktiva.</p>
+        <p class="saf-karta__notice"><strong>Testmiljö:</strong> Kartan använder de publicerade uppgifterna under Medlemmar. Kartpositioner skapas stegvis från mottagningsadresserna.</p>
         <div class="saf-karta__layout">
             <aside class="saf-karta__sidebar">
                 <form class="saf-karta__form" role="search">
