@@ -29,4 +29,4 @@ npm run build
 
 ## Test i WordPress
 
-GitHub Actions skapar det nedladdningsbara testpaketet `akupunkturforbundet-karta-0.3.8.zip` automatiskt. Hämta artefakten **akupunkturforbundet-karta-wordpress** från den senaste körningen av arbetsflödet **Bygg WordPress-paket**. Installera paketet endast på förbundets privata testmiljö och placera shortcoden `[akupunktor_karta]` på en testsida.
+GitHub Actions skapar det nedladdningsbara testpaketet `akupunkturforbundet-karta-0.3.9.zip` automatiskt. Hämta artefakten **akupunkturforbundet-karta-wordpress** från den senaste körningen av arbetsflödet **Bygg WordPress-paket**. Installera paketet endast på förbundets privata testmiljö och placera shortcoden `[akupunktor_karta]` på en testsida.

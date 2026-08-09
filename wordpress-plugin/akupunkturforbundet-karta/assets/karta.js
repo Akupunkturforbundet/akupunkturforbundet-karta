@@ -47,11 +47,13 @@
       if (name) {
         const matchesName = normalize(item.name).includes(name);
         const matchesLocality = normalize(item.locality).includes(name);
+        const matchesCounty = normalize(item.county || "").includes(name);
         const matchesPostalCode = /^\d+$/.test(postal(name)) && postal(item.postalCode).startsWith(postal(name));
-        if (!matchesName && !matchesLocality && !matchesPostalCode) return false;
+        if (!matchesName && !matchesLocality && !matchesCounty && !matchesPostalCode) return false;
       }
       if (!location) return true;
-      return isPostal ? postal(item.postalCode).startsWith(postalQuery) : normalize(item.locality) === location;
+      if (isPostal) return postal(item.postalCode).startsWith(postalQuery);
+      return normalize(item.locality) === location || normalize(item.county || "").includes(location);
     });
   }
 
@@ -128,16 +130,11 @@
       const bounds = window.L.latLngBounds([]);
       items.forEach((item) => {
         const marker = window.L.marker([item.latitude, item.longitude], { title: item.name, icon: markerIcon }).bindPopup(`<div class="saf-karta__popup">${personHtml(item)}</div>`, {
-          autoPanPaddingTopLeft: [30, 140],
+          className: "saf-karta__leaflet-popup-below",
+          offset: [0, 430],
+          autoPanPaddingTopLeft: [30, 30],
           autoPanPaddingBottomRight: [30, 30]
         }).addTo(layer);
-        marker.on("popupopen", () => {
-          map.panInside(marker.getLatLng(), {
-            paddingTopLeft: [40, 390],
-            paddingBottomRight: [40, 60],
-            animate: false
-          });
-        });
         markers.set(item.id, marker);
         bounds.extend([item.latitude, item.longitude]);
 

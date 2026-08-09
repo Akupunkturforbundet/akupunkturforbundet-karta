@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Svenska Akupunkturförbundet – Karttest
  * Description: Testversion av kartan för att hitta anslutna akupunktörer.
- * Version: 0.3.8
+ * Version: 0.3.9
  * Author: Svenska Akupunkturförbundet
  * License: GPL-2.0-or-later
  */
@@ -73,6 +73,10 @@ function saf_karta_member_data() {
         }
 
         $address = saf_karta_parse_address(get_post_meta($post->ID, 'adress', true), get_post_meta($post->ID, 'ort', true));
+        $county = get_post_meta($post->ID, '_saf_karta_county', true);
+        if (!$county && preg_match('/^1\d{2}/', $address['postalCode'])) {
+            $county = 'Stockholms län';
+        }
         $thumbnail_id = get_post_thumbnail_id($post);
         if ($thumbnail_id) {
             $thumbnail_counts[$thumbnail_id] = isset($thumbnail_counts[$thumbnail_id]) ? $thumbnail_counts[$thumbnail_id] + 1 : 1;
@@ -86,6 +90,7 @@ function saf_karta_member_data() {
             'phone' => get_post_meta($post->ID, 'telefonnummer', true),
             'email' => get_post_meta($post->ID, 'e-postadress', true),
             'website' => saf_karta_website_url(get_post_meta($post->ID, 'hemsida', true)),
+            'county' => $county,
             'image' => $has_personal_photo ? (get_the_post_thumbnail_url($post, 'medium_large') ?: '') : $default_image,
             'hasPhoto' => (bool) $has_personal_photo,
             'thumbnailId' => (int) $thumbnail_id,
@@ -129,7 +134,7 @@ function saf_karta_geocode_member() {
     foreach ($posts as $post_id) {
         $raw_address = get_post_meta($post_id, 'adress', true);
         $locality = get_post_meta($post_id, 'ort', true);
-        $address_hash = md5('v2|' . $raw_address . '|' . $locality);
+        $address_hash = md5('v3|' . $raw_address . '|' . $locality);
         if (get_post_meta($post_id, '_saf_karta_address_hash', true) === $address_hash) {
             continue;
         }
@@ -140,10 +145,9 @@ function saf_karta_geocode_member() {
             continue;
         }
 
-        delete_post_meta($post_id, '_saf_karta_latitude');
-        delete_post_meta($post_id, '_saf_karta_longitude');
         $response = wp_remote_get(add_query_arg(array(
             'format' => 'jsonv2',
+            'addressdetails' => 1,
             'limit' => 1,
             'countrycodes' => 'se',
             'street' => $address['streetAddress'],
@@ -160,6 +164,8 @@ function saf_karta_geocode_member() {
             if (!empty($results[0]['lat']) && !empty($results[0]['lon']) && $results[0]['lat'] >= 55 && $results[0]['lat'] <= 70 && $results[0]['lon'] >= 10 && $results[0]['lon'] <= 25) {
                 update_post_meta($post_id, '_saf_karta_latitude', $results[0]['lat']);
                 update_post_meta($post_id, '_saf_karta_longitude', $results[0]['lon']);
+                $county = $results[0]['address']['state'] ?? ($results[0]['address']['county'] ?? '');
+                update_post_meta($post_id, '_saf_karta_county', $county);
             }
             update_post_meta($post_id, '_saf_karta_address_hash', $address_hash);
         }
@@ -187,7 +193,7 @@ function saf_karta_refresh_rewrite_rules() {
 add_action('init', 'saf_karta_refresh_rewrite_rules', 99);
 
 function saf_karta_shortcode() {
-    $version = '0.3.8';
+    $version = '0.3.9';
     $base_url = plugin_dir_url(__FILE__);
     $custom_logo_id = get_theme_mod('custom_logo');
     $custom_logo = $custom_logo_id ? wp_get_attachment_image($custom_logo_id, 'full', false, array(
